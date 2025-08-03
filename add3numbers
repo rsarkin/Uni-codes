@@ -1,0 +1,11 @@
+//WACP for Addation of 3 numbers
+#include <stdio.h>
+
+int main()
+{
+    int a = 10, b = 12, c = 14;
+    int d;
+    d = a + b + c;
+    printf("Addition = %d", d);
+    return 0;
+}
