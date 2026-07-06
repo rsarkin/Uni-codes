@@ -17,7 +17,6 @@
 This repository acts as a vault for various programming assignments, lab tasks, and practice codes from my university journey.
 
 - 📁 **[`C_Codes/`](./C_Codes/)** - Contains individual C programming files.
-- 📄 **[`combined_codes.c`](./combined_codes.c)** - All the C codes combined into one convenient file.
 - 🌐 **[`Web dev/`](./Web%20dev/)** - Contains HTML and CSS web development assignments and projects.
 
 ## 🚀 Getting Started
