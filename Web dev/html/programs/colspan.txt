@@ -1,0 +1,19 @@
+<html>
+<body>
+<table border="1">
+
+<th>
+Student Info
+</th>
+
+<tr>
+<td>Name</td>
+<td>Hrushikesh</td>
+<td>shreyas</td>
+<td>Arkin</td>
+</tr>
+
+
+</table>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<html> 
+<head> 
+<style> 
+h1{ 
+color:yellow; 
+} 
+p {  
+background-color:green; 
+} 
+</style> 
+</head> 
+
+<body> 
+<h3> WELCOME.... </h3> 
+<p> It is a internal CSS programe </p> 
+</body> 
+</html> 

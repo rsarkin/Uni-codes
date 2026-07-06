@@ -1,0 +1,23 @@
+<html> 
+<head> 
+<title> class selector </title> 
+<style> 
+.heading{ 
+color:red; 
+} 
+.heading2{ 
+color:white 
+background-color:black; 
+} 
+.para{ 
+font-size:40px; 
+} 
+</style> 
+<head> 
+
+<body> 
+<h1 class="heading" > Class Selector </h1> 
+<h2 class="heading2"> Welcome </h2> 
+<p class="para"> hello world...! </p> 
+</body> 
+</html>

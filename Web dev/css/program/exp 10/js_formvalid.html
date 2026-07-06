@@ -1,0 +1,54 @@
+<html>
+<body>
+    
+<h3> Form Validation </h3>
+
+<form onsubmit="return validateForm()">
+    Name:<input type="text" id="name"><br><br>
+    Email:<input type="text" id="email"><br><br>
+    <input type="submit" value="submit">
+</form>
+
+<p id="msg" style="color:red;"></p>
+
+<script>
+    
+    function validateForm(){
+
+        let name= document.getElementById("name").value;
+        let email= document.getElementById("email").value;
+    
+
+    //check empty name
+
+    if(name === "") {
+        document.getElementById("msg").innerHTML = "Name is required";
+        return false;
+    }
+
+    //check empty email
+    if(name.length< 3){
+        document.getElementById("msg").innerHTML = "Name must be at least 3 characters long";
+        return false;
+    }
+
+    //check email format
+    if(!email.includes("@")) {
+        document.getElementById("msg").innerHTML="Enter valid email";
+        return false;
+    }
+
+    //if all correct
+    document.getElementById("msg").innerHTML="";
+    alert("Form submitted successfully!");
+
+    return true;
+     
+}
+
+    </script>
+    </body>
+    </html>
+
+
+

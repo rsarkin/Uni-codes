@@ -1,0 +1,13 @@
+<html>
+<head>
+<title>types of ol</title>
+</head>
+
+<body>
+<ol type="A">
+<li>asd</li>
+<li>dfg</li>
+<li>ghj</li>
+<li>klj</li>
+</body>
+</html>

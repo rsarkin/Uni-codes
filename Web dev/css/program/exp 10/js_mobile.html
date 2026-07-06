@@ -1,0 +1,29 @@
+<html>
+<body>
+
+<h3> Mobile Validation </h3>
+
+<form onsubmit="return checkMobile()">
+    Mobile:<input type="text" id="mobile"><br><br>
+    <input type="Submit">
+    </form>
+    <p id="msg"></p>
+
+    <script>
+
+    function checkMobile(){
+        let mobile = document.getElementById("mobile").value;
+        
+        if(mobile.length !=10){
+            document.getElementById("msg").innerHTML="Enter 10 digit number";
+
+            return false;
+        }
+
+        alert("Valid Mobile Number");
+        return true;
+    }
+    </script>
+
+   </body>
+   </html>

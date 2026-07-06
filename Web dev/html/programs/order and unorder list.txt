@@ -1,0 +1,16 @@
+<html>
+<head>
+<title>List in html</html>
+</head>
+<body>
+<ol>
+<li>milk</li>
+<li>flour</li>
+<li>panner</li>
+<li>rice</li>
+<li>flowers</li>
+<li>scented sticks</li>
+<li>oil</li>
+</ol>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>Ordered Lists</title>
+</head>
+
+<body>
+<ul type="square">
+<li>Avocados</li>
+<li>Cherry tomatoes</li>
+<li>Spinach or kale</li>
+<li>Bananas</li>
+</ul>
+
+<ul type="none">
+<li>Lemons</li>
+<li>Garlic </li>
+<li>onion</li>
+<li>Bell peppers</li>
+</ul>
+
+<ul type="circle">
+<li>Rice</li>
+<li>Pasta</li>
+<li>Bread</li>
+<li>Potatoes</li>
+</ul>
+
+<ul type="disc">
+<li>Bananas</li>
+<li>Oranges</li>
+<li>Yogurt</li>
+<li>Cheese</li>
+</ul>
+</body>
+</html>

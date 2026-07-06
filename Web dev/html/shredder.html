@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shredder — Privacy-First Document Printing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #2A324B;
+    --mid:    #3A4460;
+    --dim:    #4A5270;
+    --dimmer: #222839;
+    --soft:   #C7CCDB;
+    --accent: #F7C59F;
+    --white:  #FFFFFF;
+    --grid:   #333B55;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width:100%;height:100%;background:#111520;font-family:'DM Sans',sans-serif;overflow:hidden; }
+
+  #deck { position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center; }
+
+  .slide {
+    position:absolute;
+    width:min(900px, 95vw);
+    height:min(637px, calc(95vw * 0.708));
+    background:var(--bg);border-radius:12px;overflow:hidden;
+    opacity:0;transform:translateY(40px) scale(0.97);
+    transition:opacity 0.5s cubic-bezier(.4,0,.2,1),transform 0.5s cubic-bezier(.4,0,.2,1);
+    pointer-events:none;
+    box-shadow:0 40px 120px rgba(0,0,0,0.7);
+  }
+  .slide.active { opacity:1;transform:translateY(0) scale(1);pointer-events:all; }
+  .slide.out { opacity:0;transform:translateY(-40px) scale(0.97); }
+
+  .slide::before {
+    content:'';position:absolute;inset:0;
+    background-image:repeating-linear-gradient(90deg,transparent,transparent 29px,var(--grid) 29px,var(--grid) 30px);
+    opacity:0.3;pointer-events:none;z-index:0;
+  }
+  .slide > * { position:relative;z-index:1; }
+
+  .footer {
+    position:absolute;bottom:0;left:0;right:0;height:30px;
+    background:var(--dimmer);display:flex;align-items:center;
+    justify-content:space-between;padding:0 20px;z-index:10;
+  }
+  .footer span { font-family:'Syne',sans-serif;font-size:8px;letter-spacing:0.12em;color:var(--dim); }
+  .footer .pn { color:var(--soft); }
+
+  #nav { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;z-index:999; }
+  .nbtn {
+    width:40px;height:40px;border-radius:50%;background:rgba(42,50,75,0.9);
+    border:1px solid var(--dim);color:var(--soft);font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:all 0.2s;backdrop-filter:blur(8px);
+  }
+  .nbtn:hover { background:var(--mid);border-color:var(--accent);color:var(--accent); }
+  .dots { display:flex;gap:7px;align-items:center; }
+  .dot { width:7px;height:7px;border-radius:50%;background:var(--dim);cursor:pointer;transition:all 0.25s; }
+  .dot.on { background:var(--accent);transform:scale(1.35); }
+
+  .tag { display:inline-block;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.15em;color:var(--bg);background:var(--accent);padding:4px 10px;border-radius:4px; }
+  .aline { height:2px;background:var(--accent);border-radius:2px; }
+  h1,h2,h3,h4 { font-family:'Syne',sans-serif; }
+
+  /* ─── SLIDE 1: COVER ─── */
+  .s1-left { position:absolute;top:0;left:0;width:63%;height:72%;background:var(--mid);clip-path:polygon(0 0,100% 0,calc(100% - 55px) 100%,0 100%);z-index:1; }
+  .s1-right { position:absolute;top:0;right:0;width:42%;height:72%;background:var(--dimmer);clip-path:polygon(55px 0,100% 0,100% 100%,0 100%);z-index:1; }
+  .s1-icon { position:absolute;right:7%;top:10%;z-index:6; }
+  .s1-body { position:absolute;bottom:36px;left:0;right:0;padding:0 52px;z-index:5; }
+  .s1-title { font-size:clamp(48px,8.5vw,74px);font-weight:800;color:var(--white);letter-spacing:-0.02em;line-height:1;margin-bottom:10px; }
+  .s1-sub { font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--accent);margin-bottom:5px; }
+  .s1-tag2 { color:var(--soft);font-size:11.5px;margin-bottom:24px; }
+  .s1-stats { display:flex;gap:36px;margin-bottom:12px; }
+  .sv { font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:var(--accent); }
+  .sl { font-size:8.5px;color:var(--soft);letter-spacing:0.08em;margin-top:2px; }
+
+  /* ─── SHARED PAGE LAYOUT ─── */
+  .pi { padding:30px 48px 42px;height:100%;display:flex;flex-direction:column;gap:14px; }
+  .ph { display:flex;flex-direction:column;gap:7px; }
+  .ptitle { font-size:clamp(24px,3.8vw,36px);font-weight:800;color:var(--white);line-height:1.1; }
+  .ptitle .hi { color:var(--accent); }
+  .pbody { color:var(--soft);font-size:10.5px;line-height:1.68;max-width:520px; }
+
+  /* ─── SLIDE 2 ─── */
+  .cards3 { display:flex;gap:10px;flex:1; }
+  .pcard { flex:1;background:var(--mid);border-radius:10px;padding:16px 14px;display:flex;flex-direction:column;gap:7px; }
+  .pcard.dark { background:var(--dimmer); }
+  .pcard .ic { font-size:21px; }
+  .pcard .ct { font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--white); }
+  .pcard .cd { font-size:9px;color:var(--soft);line-height:1.6; }
+  .sbar { background:var(--dimmer);border-radius:8px;padding:11px 16px;border-left:3px solid var(--accent); }
+  .sbar p { font-size:9.5px;color:var(--accent);font-style:italic; }
+
+  /* ─── SLIDE 3 ─── */
+  .tl-wrap { position:relative;padding:22px 0 10px; }
+  .tl-line { position:absolute;top:28px;left:30px;right:30px;height:1.5px;background:var(--dim); }
+  .tl-row { display:flex; }
+  .tl-item { flex:1;display:flex;flex-direction:column;align-items:center;gap:7px; }
+  .tl-dot { width:12px;height:12px;border-radius:50%;background:var(--soft);z-index:2;border:2px solid var(--bg); }
+  .tl-dot.danger { background:var(--accent);box-shadow:0 0 12px rgba(247,197,159,0.5); }
+  .tl-lbl { font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;color:var(--white);text-align:center; }
+  .tl-desc { font-size:8px;color:var(--soft);text-align:center;line-height:1.5; }
+  .ibox { background:var(--dimmer);border-radius:10px;padding:14px 18px;border-left:3px solid var(--accent); }
+  .ibox .ih { font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--accent);margin-bottom:5px; }
+  .ibox p { font-size:10px;color:var(--white);line-height:1.6; }
+  .blist { display:flex;flex-direction:column;gap:7px; }
+  .bi { display:flex;gap:9px;align-items:flex-start; }
+  .bd { width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px; }
+  .bi span { font-size:9.5px;color:var(--soft);line-height:1.55; }
+
+  /* ─── SLIDE 4 ─── */
+  .pgrid { display:grid;grid-template-columns:1fr 1fr;gap:9px;flex:1; }
+  .pl { border-radius:10px;padding:15px;display:flex;flex-direction:column;gap:6px; }
+  .pl:nth-child(1),.pl:nth-child(2) { background:var(--mid); }
+  .pl:nth-child(3),.pl:nth-child(4) { background:var(--dimmer); }
+  .pl .pi2 { font-size:19px; }
+  .pl .pt { font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--white); }
+  .pl .pd { font-size:9px;color:var(--soft);line-height:1.55; }
+  .vpbar { background:var(--dimmer);border-radius:8px;padding:12px 16px;display:flex; }
+  .vps { flex:1;padding:0 14px; }
+  .vps:first-child { border-right:1px solid var(--dim);padding-left:0; }
+  .vpl { font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px; }
+  .vpd { font-size:9px;color:var(--soft);line-height:1.5; }
+
+  /* ─── SLIDE 5 ─── */
+  .srow { display:flex;gap:8px;align-items:stretch; }
+  .sc { flex:1;border-radius:10px;padding:14px 12px;display:flex;flex-direction:column;gap:8px; }
+  .sc.light { background:var(--mid); }
+  .sc.dark2 { background:var(--dimmer); }
+  .sarr { width:22px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:20px;font-family:'Syne',sans-serif;font-weight:800;flex-shrink:0;align-self:center; }
+  .snum { width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--bg);font-family:'Syne',sans-serif;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .stitle { font-family:'Syne',sans-serif;font-size:10.5px;font-weight:700;color:var(--white); }
+  .sbulls { display:flex;flex-direction:column;gap:5px; }
+  .sbulls li { font-size:8px;color:var(--soft);list-style:none;padding-left:12px;position:relative;line-height:1.45; }
+  .sbulls li::before { content:'';position:absolute;left:0;top:4px;width:5px;height:5px;border-radius:50%;background:var(--accent); }
+  .mrow { display:flex;gap:10px; }
+  .mc { flex:1;background:var(--dimmer);border-radius:10px;padding:12px; }
+  .mt { font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;color:var(--accent);letter-spacing:0.1em;margin-bottom:8px; }
+  .mf { background:var(--dim);border-radius:5px;padding:6px 10px;font-size:8.5px;color:var(--soft);margin-bottom:5px; }
+  .mbtn { background:var(--accent);color:var(--bg);border-radius:5px;padding:6px 10px;font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;text-align:center; }
+  .mmap { background:var(--mid);border-radius:6px;padding:10px;position:relative;min-height:74px; }
+  .mpin { position:absolute;display:flex;align-items:center;gap:5px; }
+  .mpdot { width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;box-shadow:0 0 8px rgba(247,197,159,0.4); }
+  .mpname { font-size:7.5px;color:var(--white);font-weight:500; }
+  .mpdist { font-size:7px;color:var(--soft); }
+
+  /* ─── SLIDE 6 ─── */
+  .pcols { display:flex;gap:12px;flex:1; }
+  .pcol1 { flex:1.4;display:flex;flex-direction:column;gap:0; }
+  .pcol2 { flex:1;display:flex;flex-direction:column;gap:10px; }
+  .bbar { background:var(--dim);border-radius:5px;padding:5px 10px;font-size:8px;color:var(--soft);margin-bottom:7px; }
+  .uzone { border:1.5px dashed var(--accent);border-radius:6px;padding:12px;text-align:center;margin-bottom:7px; }
+  .uzone .um { font-family:'Syne',sans-serif;font-weight:700;color:var(--white);font-size:9.5px; }
+  .uzone .us { font-size:8px;color:var(--soft); }
+  .fitem { background:var(--mid);border-radius:5px;padding:7px 10px;display:flex;align-items:center;gap:7px;margin-bottom:7px; }
+  .fn { font-size:8.5px;color:var(--white);font-weight:500;flex:1; }
+  .fm { font-size:7.5px;color:var(--soft); }
+  .fbdg { font-size:7.5px;color:var(--accent);font-weight:700;background:rgba(247,197,159,0.1);padding:2px 5px;border-radius:3px; }
+  .tchips { display:flex;gap:5px;margin-bottom:0; }
+  .tc { flex:1;padding:5px;border-radius:4px;text-align:center;font-family:'Syne',sans-serif;font-size:8px;font-weight:700;background:var(--dim);color:var(--soft);cursor:pointer;transition:all 0.2s; }
+  .tc.on { background:var(--accent);color:var(--bg); }
+  .qcard { background:var(--mid);border-radius:10px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:7px; }
+  .qtlabel { font-family:'Syne',sans-serif;font-size:9px;font-weight:700;color:var(--accent); }
+  .qtimer { font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent); }
+  .qsub { font-size:8px;color:var(--soft); }
+  .scards { display:flex;gap:9px; }
+  .scard { flex:1;background:var(--dimmer);border-radius:8px;padding:11px;display:flex;flex-direction:column;gap:4px; }
+  .slb { font-size:7.5px;color:var(--soft); }
+  .svv { font-family:'Syne',sans-serif;font-size:20px;font-weight:800; }
+  .svv.cnt { color:var(--accent); }
+  .svv.ok { color:#7bffc0;font-size:24px; }
+  .ssub { font-size:7.5px;color:var(--soft); }
+  .shredanim { display:flex;gap:3px;justify-content:center;align-items:flex-end;height:34px;margin-top:2px; }
+  .ss { width:5px;border-radius:3px;background:var(--accent);animation:shreda 1.4s ease-in-out infinite alternate; }
+  .ss:nth-child(2){background:var(--soft);animation-delay:0.15s}
+  .ss:nth-child(3){animation-delay:0.3s}
+  .ss:nth-child(4){background:var(--soft);animation-delay:0.45s}
+  .ss:nth-child(5){animation-delay:0.6s}
+  @keyframes shreda { 0%{height:16px;opacity:0.5}100%{height:30px;opacity:1} }
+
+  /* ─── SLIDE 7 ─── */
+  .s7h { background:var(--mid);padding:22px 48px 18px;position:relative;z-index:1; }
+  .s7ht { font-family:'Syne',sans-serif;font-size:9px;letter-spacing:0.13em;color:var(--accent);font-weight:700;margin-bottom:7px; }
+  .s7h h2 { font-size:clamp(20px,3.2vw,28px);font-weight:800;color:var(--white); }
+  .s7b { padding:18px 48px 42px;display:flex;flex-direction:column;gap:14px;flex:1; }
+  .ctable { width:100%;border-collapse:collapse; }
+  .ctable th { font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;padding:7px 11px;background:var(--dim);color:var(--white);text-align:left; }
+  .ctable th.ac { color:var(--accent);background:rgba(247,197,159,0.1); }
+  .ctable td { font-size:8.5px;padding:6px 11px;border-bottom:1px solid var(--dim);color:var(--soft); }
+  .ctable td.fc { color:var(--white);font-weight:500; }
+  .ctable td.ac { color:var(--accent);font-weight:700;background:rgba(247,197,159,0.04); }
+  .ctable tr:last-child td { border-bottom:none; }
+  .neg { color:var(--dim) !important; }
+  .vs h3 { font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:7px; }
+  .vbulls { display:grid;grid-template-columns:1fr 1fr;gap:5px 18px; }
+  .qbar { background:var(--mid);border-radius:8px;padding:13px 16px;border-left:3px solid var(--accent); }
+  .qbar blockquote { font-size:10.5px;color:var(--white);font-style:italic;line-height:1.6; }
+  .qbar cite { display:block;margin-top:5px;font-size:8.5px;color:var(--accent);font-style:normal;font-family:'Syne',sans-serif;font-weight:700; }
+
+  /* ─── ANIMATIONS ─── */
+  .slide.active .ai {
+    animation:fadeup 0.5s cubic-bezier(.4,0,.2,1) forwards;
+    opacity:0;
+  }
+  @keyframes fadeup { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
+  .ai:nth-child(1){animation-delay:0.04s}.ai:nth-child(2){animation-delay:0.11s}
+  .ai:nth-child(3){animation-delay:0.18s}.ai:nth-child(4){animation-delay:0.25s}
+  .ai:nth-child(5){animation-delay:0.32s}.ai:nth-child(6){animation-delay:0.39s}
+
+  #hint { position:fixed;bottom:76px;left:50%;transform:translateX(-50%);font-size:8.5px;color:var(--dim);letter-spacing:0.1em;animation:hfade 4s ease forwards;white-space:nowrap; }
+  @keyframes hfade{0%,60%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+<div id="deck">
+
+<!-- ══ SLIDE 1: COVER ══ -->
+<div class="slide active" id="s1">
+  <div class="s1-left"></div>
+  <div class="s1-right"></div>
+  <div class="s1-icon">
+    <svg width="120" height="115" viewBox="0 0 120 115">
+      <rect x="18" y="46" width="84" height="33" rx="6" fill="#F7C59F"/>
+      <rect x="34" y="38" width="52" height="10" rx="3" fill="#2A324B"/>
+      <rect x="30" y="81" width="7" height="20" rx="3.5" fill="#F7C59F" opacity="0.9">
+        <animate attributeName="height" values="20;14;22;20" dur="1.6s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="42" y="81" width="7" height="16" rx="3.5" fill="#C7CCDB" opacity="0.8">
+        <animate attributeName="height" values="16;22;13;16" dur="1.4s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="54" y="81" width="7" height="24" rx="3.5" fill="#F7C59F">
+        <animate attributeName="height" values="24;18;24;20" dur="1.8s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="66" y="81" width="7" height="14" rx="3.5" fill="#C7CCDB" opacity="0.8">
+        <animate attributeName="height" values="14;20;16;14" dur="1.5s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="78" y="81" width="7" height="18" rx="3.5" fill="#F7C59F" opacity="0.9">
+        <animate attributeName="height" values="18;12;20;18" dur="1.7s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="46" y="16" width="28" height="22" rx="2" fill="white" opacity="0.9">
+        <animate attributeName="y" values="16;28;16" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <line x1="52" y1="22" x2="68" y2="22" stroke="#2A324B" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+      <line x1="52" y1="27" x2="68" y2="27" stroke="#2A324B" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+      <line x1="52" y1="32" x2="62" y2="32" stroke="#2A324B" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+    </svg>
+  </div>
+  <div class="s1-body">
+    <div class="ai"><span class="tag">PITCH DECK · 2025</span></div>
+    <div class="ai" style="margin-top:10px">
+      <div class="s1-title">SHREDDER</div>
+      <div class="aline" style="width:170px;margin:8px 0 11px"></div>
+      <div class="s1-sub">Privacy-First Document Printing</div>
+      <div class="s1-tag2">Your files. Printed. Then gone. Forever.</div>
+    </div>
+    <div class="s1-stats ai">
+      <div><div class="sv">100%</div><div class="sl">FILE DELETION</div></div>
+      <div><div class="sv">0</div><div class="sl">DATA STORED</div></div>
+      <div><div class="sv">1-click</div><div class="sl">PRIVACY</div></div>
+    </div>
+    <div class="aline ai" style="width:180px;margin-top:8px"></div>
+  </div>
+  <div class="footer"><span>SHREDDER · CONFIDENTIAL</span><span class="pn">1 / 7</span></div>
+</div>
+
+<!-- ══ SLIDE 2: PROBLEM ══ -->
+<div class="slide" id="s2">
+  <div class="pi">
+    <div class="ph ai">
+      <span class="tag">THE PROBLEM</span>
+      <div class="ptitle" style="margin-top:7px">You printed it.<br><span class="hi">But it never left.</span></div>
+      <div class="aline" style="width:140px"></div>
+    </div>
+    <div class="pbody ai">Every day, students and professionals walk into a print shop, hand over a file containing their assignments, resumes, or personal documents — and walk out with only the printout. The file stays behind. Nobody tells you. Nobody asks.</div>
+    <div class="cards3 ai">
+      <div class="pcard">
+        <div class="ic">🎓</div>
+        <div class="ct">The Student</div>
+        <div class="cd">Neha submits her thesis draft at a campus print shop. She collects her copies and leaves. Her file — 60 pages of research — remains on the system.</div>
+      </div>
+      <div class="pcard">
+        <div class="ic">🏪</div>
+        <div class="ct">The Print Shop</div>
+        <div class="cd">The shop's system stores every job in a local folder. No deletion policy. No encryption. Files accumulate for months, sometimes years.</div>
+      </div>
+      <div class="pcard dark">
+        <div class="ic">⚠️</div>
+        <div class="ct">The Risk</div>
+        <div class="cd">Anyone with system access — a staff member, a hacker, or a curious employee — can open those files. Personal data. Academic work. Private records.</div>
+      </div>
+    </div>
+    <div class="sbar ai"><p>"73% of print shops in a 2024 survey had no formal file-deletion policy."</p></div>
+  </div>
+  <div class="footer"><span>SHREDDER · CONFIDENTIAL</span><span class="pn">2 / 7</span></div>
+</div>
+
+<!-- ══ SLIDE 3: INSIGHT ══ -->
+<div class="slide" id="s3">
+  <div class="pi">
+    <div class="ph ai">
+      <span class="tag">THE INSIGHT</span>
+      <div class="ptitle" style="margin-top:7px">Temporary files.<br><span class="hi">Permanent storage.</span></div>
+      <div class="aline" style="width:155px"></div>
+    </div>
+    <div class="pbody ai">The design of print shop software was built for convenience, not privacy. Files are sent to a queue, printed, and then — simply forgotten. Nobody built a delete button. Nobody thought they needed one. Until now.</div>
+    <div class="tl-wrap ai">
+      <div class="tl-line"></div>
+      <div class="tl-row">
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-lbl">File Uploaded</div><div class="tl-desc">User sends doc<br>to shop system</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-lbl">Job Printed</div><div class="tl-desc">Paper comes out.<br>Job marked done.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-lbl">Time Passes</div><div class="tl-desc">Days. Weeks.<br>Months.</div></div>
+        <div class="tl-item"><div class="tl-dot danger"></div><div class="tl-lbl" style="color:var(--accent)">File Still There</div><div class="tl-desc">Sitting in a folder.<br><strong style="color:var(--accent)">Forever.</strong></div></div>
+      </div>
+    </div>
+    <div class="ibox ai">
+      <div class="ih">The core insight:</div>
+      <p>Print shops aren't bad actors. They simply never had a tool that made privacy automatic. <strong style="color:var(--accent)">Shredder is that tool.</strong></p>
+    </div>
+    <div class="blist ai">
+      <div class="bi"><div class="bd"></div><span>Files are "temporary" in intent but permanent in practice</span></div>
+      <div class="bi"><div class="bd"></div><span>Print shop owners have no incentive to build this themselves</span></div>
+      <div class="bi"><div class="bd"></div><span>Users assume deletion happens — it almost never does</span></div>
+    </div>
+  </div>
+  <div class="footer"><span>SHREDDER · CONFIDENTIAL</span><span class="pn">3 / 7</span></div>
+</div>
+
+<!-- ══ SLIDE 4: SOLUTION ══ -->
+<div class="slide" id="s4">
+  <div class="pi">
+    <div class="ph ai">
+      <span class="tag">THE SOLUTION</span>
+      <div class="ptitle" style="margin-top:7px">Shredder. <span style="font-size:55%;color:var(--soft);font-weight:400">A privacy-first print system built for the real world.</span></div>
+      <div class="aline" style="width:195px"></div>
+    </div>
+    <div class="pbody ai">Shredder replaces the traditional print shop workflow with one that guarantees your file is gone the moment your job is done. No logs. No folders. No trace.</div>
+    <div class="pgrid ai">
+      <div class="pl"><div class="pi2">🔒</div><div class="pt">Privacy by Default</div><div class="pd">Every print job auto-deletes on completion. No manual step required from shop or user.</div></div>
+      <div class="pl"><div class="pi2">📲</div><div class="pt">Token-Based Access</div><div class="pd">Users receive a one-time QR token. No account. No login. No trace left behind.</div></div>
+      <div class="pl"><div class="pi2">⏱</div><div class="pt">Countdown Timer</div><div class="pd">Files are accessible for a limited window only — then wiped automatically by the system.</div></div>
+      <div class="pl"><div class="pi2">🛡</div><div class="pt">Zero Storage Policy</div><div class="pd">Shredder never writes files to persistent storage. Guaranteed at the architecture level.</div></div>
+    </div>
+    <div class="vpbar ai">
+      <div class="vps"><div class="vpl">For Users:</div><div class="vpd">Print with confidence. Your documents belong to you — and only you.</div></div>
+      <div class="vps"><div class="vpl">For Shops:</div><div class="vpd">Offer a premium, privacy-compliant service. Zero liability. Maximum trust.</div></div>
+    </div>
+  </div>
+  <div class="footer"><span>SHREDDER · CONFIDENTIAL</span><span class="pn">4 / 7</span></div>
+</div>
+
+<!-- ══ SLIDE 5: HOW IT WORKS ══ -->
+<div class="slide" id="s5">
+  <div class="pi" style="gap:12px">
+    <div class="ph ai">
+      <span class="tag">HOW IT WORKS</span>
+      <div class="ptitle" style="margin-top:7px">Three steps. <span class="hi">One promise.</span></div>
+      <div class="aline" style="width:155px"></div>
+      <div class="pbody" style="margin-top:3px">Shredder fits into the existing print shop experience — with no hardware changes required.</div>
+    </div>
+    <div class="srow ai">
+      <div class="sc light"><div class="snum">01</div><div class="stitle">Upload &amp; Configure</div><ul class="sbulls"><li>Open Shredder app or web portal</li><li>Choose print settings (copies, size, B&amp;W)</li><li>Set a self-destruct timer: 5, 15, or 30 min</li></ul></div>
+      <div class="sarr">›</div>
+      <div class="sc dark2"><div class="snum">02</div><div class="stitle">Get Your Token</div><ul class="sbulls"><li>Receive a unique QR code on your phone</li><li>QR is valid only for your session</li><li>Walk to the nearest verified Shredder shop</li></ul></div>
+      <div class="sarr">›</div>
+      <div class="sc light"><div class="snum">03</div><div class="stitle">Print. Then Shred.</div><ul class="sbulls"><li>Scan QR at the shop's Shredder terminal</li><li>File decrypts, prints, then deletes instantly</li><li>Confirmation: <strong style="color:var(--accent)">✓ File Shredded</strong></li></ul></div>
+    </div>
+    <div class="mrow ai">
+      <div class="mc">
+        <div class="mt">PRINT CONFIGURATION</div>
+        <div class="mf">Copies: &nbsp;○ 1 &nbsp;○ 2 &nbsp;<strong style="color:var(--accent)">● 3</strong></div>
+        <div class="mf">Color: &nbsp;<strong style="color:var(--accent)">● B&amp;W</strong> &nbsp;○ Colour</div>
+        <div class="mf">Auto-delete: &nbsp;<strong style="color:var(--accent)">● 5 min</strong> &nbsp;○ 15 min</div>
+        <div class="mbtn">Generate Token &nbsp;→</div>
+      </div>
+      <div class="mc">
+        <div class="mt">NEARBY SHREDDER SHOPS</div>
+        <div class="mmap">
+          <div class="mpin" style="top:12px;left:24px"><div class="mpdot"></div><div><div class="mpname">QuickPrint Hub</div><div class="mpdist">0.3 km away</div></div></div>
+          <div class="mpin" style="top:34px;left:96px"><div class="mpdot"></div><div><div class="mpname">CampusCopy</div><div class="mpdist">0.8 km away</div></div></div>
+          <div class="mpin" style="top:54px;left:56px"><div class="mpdot"></div><div><div class="mpname">PrintZone</div><div class="mpdist">1.2 km away</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>SHREDDER · CONFIDENTIAL</span><span class="pn">5 / 7</span></div>
+</div>
+
+<!-- ══ SLIDE 6: PRODUCT EXPERIENCE ══ -->
+<div class="slide" id="s6">
+  <div class="pi" style="gap:11px">
+    <div class="ph ai">
+      <span class="tag">PRODUCT EXPERIENCE</span>
+      <div class="ptitle" style="margin-top:7px">Designed to feel as secure <span class="hi">as it actually is.</span></div>
+      <div class="aline" style="width:170px"></div>
+    </div>
+    <div class="pcols ai">
+      <div class="pcol1">
+        <div style="background:var(--dimmer);border-radius:10px;padding:13px">
+          <div class="bbar">● ● &nbsp;&nbsp; shredder.app/upload</div>
+          <div class="uzone"><div class="um">Drop your file here</div><div class="us">or click to browse</div></div>
+          <div class="fitem"><span>📄</span><span class="fn">thesis_final_v3.pdf</span><span class="fm">2.4 MB</span><span class="fbdg">✓ Encrypted</span></div>
+          <div style="font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;color:var(--soft);margin-bottom:5px">Self-Destruct Timer</div>
+          <div class="tchips">
+            <div class="tc on" onclick="setChip(this)">5 min</div>
+            <div class="tc" onclick="setChip(this)">15 min</div>
+            <div class="tc" onclick="setChip(this)">30 min</div>
+          </div>
+        </div>
+      </div>
+      <div class="pcol2">
+        <div class="qcard">
+          <div class="qtlabel">YOUR TOKEN</div>
+          <svg width="68" height="68" viewBox="0 0 68 68"><rect width="68" height="68" rx="4" fill="white"/>
+            <rect x="4" y="4" width="20" height="20" rx="2" fill="#2A324B"/><rect x="7" y="7" width="14" height="14" rx="1" fill="white"/><rect x="10" y="10" width="8" height="8" rx="1" fill="#2A324B"/>
+            <rect x="44" y="4" width="20" height="20" rx="2" fill="#2A324B"/><rect x="47" y="7" width="14" height="14" rx="1" fill="white"/><rect x="50" y="10" width="8" height="8" rx="1" fill="#2A324B"/>
+            <rect x="4" y="44" width="20" height="20" rx="2" fill="#2A324B"/><rect x="7" y="47" width="14" height="14" rx="1" fill="white"/><rect x="10" y="50" width="8" height="8" rx="1" fill="#2A324B"/>
+            <rect x="30" y="4" width="6" height="6" rx="1" fill="#2A324B"/><rect x="38" y="4" width="6" height="6" rx="1" fill="#2A324B"/>
+            <rect x="30" y="12" width="6" height="6" rx="1" fill="#2A324B"/><rect x="38" y="12" width="6" height="6" rx="1" fill="#2A324B"/>
+            <rect x="4" y="30" width="6" height="6" rx="1" fill="#2A324B"/><rect x="12" y="30" width="6" height="6" rx="1" fill="#2A324B"/>
+            <rect x="30" y="30" width="6" height="6" rx="1" fill="#2A324B"/><rect x="38" y="30" width="6" height="6" rx="1" fill="#2A324B"/>
+            <rect x="48" y="30" width="6" height="6" rx="1" fill="#2A324B"/><rect x="58" y="30" width="6" height="6" rx="1" fill="#2A324B"/>
+            <rect x="30" y="38" width="6" height="6" rx="1" fill="#2A324B"/><rect x="42" y="38" width="6" height="6" rx="1" fill="#2A324B"/>
+            <rect x="56" y="44" width="6" height="6" rx="1" fill="#2A324B"/><rect x="30" y="48" width="6" height="6" rx="1" fill="#2A324B"/>
+            <rect x="42" y="54" width="6" height="6" rx="1" fill="#2A324B"/><rect x="58" y="58" width="6" height="6" rx="1" fill="#2A324B"/>
+          </svg>
+          <div class="qsub">Scan at shop terminal</div>
+          <div class="qtimer" id="cd">04:22</div>
+          <div class="qsub">Valid for session only</div>
+        </div>
+      </div>
+    </div>
+    <div class="scards ai">
+      <div class="scard"><div class="slb">File Shreds In:</div><div class="svv cnt" id="td">04:22</div><div class="ssub">Auto-delete armed 🔒</div></div>
+      <div class="scard" style="align-items:center"><div class="slb">Shredding...</div><div class="shredanim"><div class="ss"></div><div class="ss"></div><div class="ss"></div><div class="ss"></div><div class="ss"></div></div></div>
+      <div class="scard" style="align-items:center"><div class="svv ok">✓</div><div style="font-family:'Syne',sans-serif;font-size:9.5px;font-weight:700;color:var(--white)">Print Confirmed</div><div class="ssub">0 files retained</div></div>
+    </div>
+  </div>
+  <div class="footer"><span>SHREDDER · CONFIDENTIAL</span><span class="pn">6 / 7</span></div>
+</div>
+
+<!-- ══ SLIDE 7: VISION ══ -->
+<div class="slide" id="s7">
+  <div style="height:100%;display:flex;flex-direction:column">
+    <div class="s7h ai">
+      <div class="s7ht">WHY SHREDDER WINS · WHERE WE'RE GOING</div>
+      <h2>Built different. <span style="color:var(--accent)">Thinking bigger.</span></h2>
+    </div>
+    <div class="s7b">
+      <div class="ai">
+        <table class="ctable">
+          <thead><tr><th>Feature</th><th>Traditional Print Shop</th><th>Cloud Print Services</th><th class="ac">Shredder ✓</th></tr></thead>
+          <tbody>
+            <tr><td class="fc">Auto-deletes files</td><td class="neg">✗ Never</td><td class="neg">✗ Sometimes</td><td class="ac">✓ Always</td></tr>
+            <tr><td class="fc">No account required</td><td class="neg">✗ Often no</td><td class="neg">✗ Login needed</td><td class="ac">✓ Always</td></tr>
+            <tr><td class="fc">Token-based access</td><td class="neg">✗ Not offered</td><td class="neg">✗ Not offered</td><td class="ac">✓ Built-in</td></tr>
+            <tr><td class="fc">Countdown self-destruct</td><td class="neg">✗ No</td><td class="neg">✗ No</td><td class="ac">✓ Yes</td></tr>
+            <tr><td class="fc">Zero persistent storage</td><td class="neg">✗ Files remain</td><td class="neg">✗ Cloud storage</td><td class="ac">✓ Guaranteed</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="vs ai">
+        <h3>Our Vision</h3>
+        <div class="aline" style="width:65px;margin-bottom:9px"></div>
+        <div class="vbulls">
+          <div class="bi"><div class="bd"></div><span>Become the global standard for private document printing</span></div>
+          <div class="bi"><div class="bd"></div><span>Partner with university campuses, hospitals, and law firms</span></div>
+          <div class="bi"><div class="bd"></div><span>Introduce Shredder-certified shops with a trust badge</span></div>
+          <div class="bi"><div class="bd"></div><span>Expand to scanning and faxing — every document workflow</span></div>
+        </div>
+      </div>
+      <div class="qbar ai">
+        <blockquote>"In a world that remembers everything,<br>Shredder is the only tool that forgets."</blockquote>
+        <cite>— Shredder, 2025</cite>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>SHREDDER · CONFIDENTIAL</span><span class="pn">7 / 7</span></div>
+</div>
+
+</div><!-- /deck -->
+
+<div id="nav">
+  <button class="nbtn" onclick="go(-1)">‹</button>
+  <div class="dots" id="dots"></div>
+  <button class="nbtn" onclick="go(1)">›</button>
+</div>
+<div id="hint">← → arrow keys or click dots to navigate</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const dotsEl = document.getElementById('dots');
+  let cur = 0, busy = false;
+
+  slides.forEach((_,i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' on':'');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  });
+
+  function goTo(n) {
+    if (busy || n===cur || n<0 || n>=slides.length) return;
+    busy = true;
+    slides[cur].classList.add('out');
+    slides[cur].classList.remove('active');
+    setTimeout(() => {
+      slides[cur].classList.remove('out');
+      const prev = cur; cur = n;
+      // reset animations
+      slides[cur].querySelectorAll('.ai').forEach(el => {
+        el.style.animation='none'; el.offsetHeight; el.style.animation='';
+      });
+      slides[cur].classList.add('active');
+      document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('on', i===cur));
+      busy = false;
+    }, 280);
+  }
+
+  function go(d) { goTo(cur+d); }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key==='ArrowDown') go(1);
+    if (e.key==='ArrowLeft'||e.key==='ArrowUp') go(-1);
+  });
+
+  // Timer
+  let secs = 262;
+  setInterval(() => {
+    secs = secs > 0 ? secs-1 : 262;
+    const t = `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
+    document.getElementById('cd').textContent = t;
+    document.getElementById('td').textContent = t;
+  }, 1000);
+
+  function setChip(el) {
+    document.querySelectorAll('.tc').forEach(c=>c.classList.remove('on'));
+    el.classList.add('on');
+  }
+
+  // Touch/swipe
+  let tx=0;
+  document.addEventListener('touchstart', e=>tx=e.touches[0].clientX);
+  document.addEventListener('touchend', e=>{
+    const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>50) go(dx<0?1:-1);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<html> 
+<head> 
+<style> 
+h1,h2,p { 
+color:green; 
+background-color:yellow; 
+} 
+</style> 
+</head> 
+
+<body> 
+<h1> Welcome </h1> 
+<h2> Grouping selector </h2> 
+<p> hello world!! </p>  
+</body>

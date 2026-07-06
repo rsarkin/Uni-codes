@@ -1,0 +1,12 @@
+<html>
+<head>
+<title>Div Tag</title>
+</head>
+
+<body>
+<div>
+<h1>Using Div Tag</h1>
+<p>hello everyone im Arkin
+</div>
+</body>
+</html>

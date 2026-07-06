@@ -1,0 +1,39 @@
+<html>
+<body>
+
+<h3>Form Validation</h3>
+
+<form onsubmit="return validateForm()">
+    Name: <input type="text" id="Name"><br><br>
+    Email: <input type="text" id="email"><br><br>
+    <input type="submit" value="Submit">
+</form>
+
+<p id="msg" style="color:red;"></p>
+
+<script>
+function validateForm() {
+
+    let name = document.getElementById("Name").value;
+    let email = document.getElementById("email").value;
+
+if(name==""){
+document.getElementById("msg").innerHTML="Name is rquired";
+return false;
+
+}
+
+if(email==""){
+document.getElementById("msg").innerHTML="Email is rquired";
+return false;
+
+}
+
+alert("Form submitted successfully!");
+return true;
+}
+
+</script>
+
+</body>
+</html>

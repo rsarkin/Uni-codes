@@ -1,0 +1,21 @@
+<html> 
+<head> 
+<title> element selector in css </title> 
+<style> 
+h1 { 
+color:grey; 
+background-color:pink; 
+} 
+p { 
+background-color:red; 
+fond-size:10px; 
+color:black; 
+} 
+</style> 
+</head> 
+
+<body> 
+<h1> It is first program of CSS   </h1> 
+<p> Hello World  </p> 
+</body> 
+</html>

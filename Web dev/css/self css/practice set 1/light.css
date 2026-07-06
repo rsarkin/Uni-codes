@@ -1,0 +1,14 @@
+#box{
+    align-items: center;
+    background-color: grey;
+    width: 100px;
+    height: 250px;
+    margin-left: 200px;
+    margin-top: 50px;
+}
+
+#col{
+    border-radius: 50%;
+    background-color: red;
+    margin-left: 200px;
+}

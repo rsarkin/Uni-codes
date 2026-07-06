@@ -1,0 +1,104 @@
+<article>
+<header>
+<h2>Semantic Tags</h2>
+<time> 28 Jan 2026 11:23 am </time>
+</header>
+
+<section>
+<p> Hello World!! <mark> Hello World!!</mark> </p>
+</section>
+
+<figure>
+<img src="vin.jfif" alt="Image not found :(" >
+<figcaption> you have no enemies thorfin</figcaption>
+</figure>
+
+
+<details>
+<summary> Read more...</summary>
+<p> Vinland saga is journey of guy how help us to found ourselves in it</p>
+</details>
+
+<aside>
+<p>Note:this show consist of 2 seasons total runtime is of 36 hours and we are looking forward  for it
+</p>
+</aside>
+
+<footer>
+<nav>
+<a href="#"> home</a>
+<a href="#"> About</a>
+</nav>
+</footer>
+
+</article>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<article>
+<header>
+<h2>Semantic Tags</h2>
+<time> 28 Jan 2026 11:23 am </time>
+</header>
+
+<section>
+<p> Hello World!! <mark> Hello World!!</mark> </p>
+</section>
+
+<figure>
+<img src="vin.jfif" alt="Image not found :(" >
+<figcaption> you have no enemies thorfin</figcaption>
+</figure>
+
+
+<details>
+<summary> Read more...</summary>
+<p> Vinland saga is journey of guy who help us to found ourselves in it</p>
+</details>
+
+<aside>
+<p>Note:this show consist of 2 seasons total runtime is of 36 hours and we are looking forward  for it
+</p>
+</aside>
+
+<footer>
+<nav>
+<a href="#"> home</a>
+<a href="#"> About</a>
+</nav>
+</footer>
+
+</article>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

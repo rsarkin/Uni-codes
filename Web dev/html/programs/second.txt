@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>
+revision till image tags
+</title>
+</head>
+<p>in this page we will be revising all the tags till inserting image </p>
+ <br>okay now we will
+<br>begin
+
+<h1>Hello!!
+<h2>Hello!!
+<h3>Hello!!
+<h4>Hello!!
+<h5>Hello!!
+<h6>Hello!!
+
+<b>Bold</b>
+<i>itallic</i>
+<u>underline</u>
+<em>Empasis</em>
+<strong>strong</strong>
+<p> We are Marking !!!<mark>We are Marking!!!</mark></p>
+<p>Delete tag<del>tag</del></p>
+<p>Hurry Up<ins>SALE ENDS SOON</ins></p>
+<p>LOOK DOWN<sub>hello:0</sub></p>
+<p>LOOK UP<sup>hello:O</sup></p>
+
+
+<p style="color : red;"> WARNING!!!</p>
+<p style="background-color:pink;"> Hello world</p>
+<p style= "fontsize: 100px;"> FONT SIZE</p>
+
+
+<img src="vin.jfif" alt="image not found">
+</body>
+</html>

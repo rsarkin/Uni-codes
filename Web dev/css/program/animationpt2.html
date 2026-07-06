@@ -1,0 +1,53 @@
+<html>
+<head>
+<style>
+.square{
+position:relative;
+left:50px;
+top:50px;
+width:100px;
+height:100px;
+background-color:purble;
+Animation: colorChange 7s infinite;
+transition-property:padding,position,left;
+transition-duration:0.2s;
+}
+.square:hover{
+padding:40px 40px 40px 40px;
+position:relative;
+left:100px;
+}
+@keyframes colorChange{
+0%{
+background-color:purple;
+}
+20%{
+background-color:indigo;
+}
+30%{
+background-color:blue;
+}
+40%{
+background-color:green;
+}
+50%{
+background-color:yellow;
+}
+60%{
+background-color:orange;
+}
+70%{
+background-color:red;
+}
+100%{
+background-color:purple;
+}
+}
+</style>
+</head>
+<body>
+<h1> Animation property</h1>
+<p>study of animation property </p>
+<div class="square"></div>
+</body>
+</html>

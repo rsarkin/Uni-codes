@@ -1,0 +1,11 @@
+<html>
+<head>
+<title> inserting video</title>
+</head>
+
+<body>
+<video control>
+<source src="vid.mp4"  type="video/mp4"  height="500px" width="250px" >
+</video>
+</body>
+</html>

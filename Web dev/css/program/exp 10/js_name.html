@@ -1,0 +1,31 @@
+<html>
+<body>
+
+    <h3> Name Validation </h3>
+    <form onsubmit="return checkName()">
+        Name:<input type="text" id="name"><br><br>
+        <input type="submit" value="Submit">
+        </form>
+        <p id="msg" style="color:red;"></p>
+
+        <script>
+        function checkName(){
+        let name = document.getElementById("name").value;
+
+        let pattern = /^[A-Za-z]+$/;
+
+        if(!pattern.test(name)) {
+
+            document.getElementById("msg").innerHTML="Only letters allowed";
+            return false;
+        }
+
+        alert("Valid Name");
+        return true;
+    }
+   </script>
+   </body>
+   </html> 
+          
+        
+        
